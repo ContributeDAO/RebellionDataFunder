@@ -1,5 +1,5 @@
-import serial
 
+import serial
 
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
@@ -7,12 +7,10 @@ from cryptography.hazmat.primitives import serialization
 import hashlib
 import os
 
-import time
-port = 'COM5'  # 串口号，Linux 下可能是 '/dev/ttyUSB0'
-baudrate = 460800
+class EncryptionHardwarePort:
+    def __init__(self, port, baud_rate):
+        self.ser = serial.Serial(port, baud_rate, timeout=1)
 
-# 打开串口
-ser = serial.Serial(port, baudrate, timeout=1)
 
 def send_command(command_prefix: bytes, param: bytes):
     """
@@ -159,78 +157,3 @@ def get_file_hash(file_path: str, hash_algorithm: str = 'sha256') -> str:
     
     # 获取哈希摘要
     return hash_obj.hexdigest()
-
-
-
-
-
-
-
-
-
-
-# if ser.isOpen():
-#     print(f"Opened {port} at {baudrate} baud")
-
-#     try:
-#         # # 要发送的数据，十六进制转换为字节
-#         # send_data = bytes.fromhex('52 50 00')
-        
-#         # # 发送数据
-#         # ser.write(send_data)
-#         # print("Data sent:", send_data.hex())
-
-#         # # 等待设备响应，可以根据实际情况调整延时
-#         # time.sleep(0.5)  # 例如，等待500毫秒
-
-#         # # 读取数据，这里使用readline来读取一行数据
-#         # response = ser.readline()
-        
-#         # # 检查响应是否全0
-
-#         # response = generate_key_pair(0)
-#         # response = generate_key_pair(1)
-#         # response = generate_key_pair(2)
-#         # response = generate_key_pair(3)
-#         # response = generate_key_pair(4)
-#         response = read_public_key(4)
-#         # response = decompress_public_key(response)
-
-#         # response =  set_random_number_mode(0x59)
-#         # response = output_random_number()
-#         # response = set_output_random_number_count(4,4)
-#         # response =  set_random_number_mode(0x01)
-#         # response = output_random_number()       
-#         # response = delete_key_pair(2)
-
-# # 示例：提取文件的SHA-256哈希值
-#         file_path = './testunit/example.txt'  # 相对于当前工作目录的文件路径
-#         try:
-#             hash_value = get_file_hash(file_path, 'sha256')
-#             print(f"The SHA-256 hash of the file is: {hash_value}")
-#         except FileNotFoundError as e:
-#             print(f"File not found: {e}")
-#         except ValueError as e:
-#             print(f"Value error: {e}")
-
-
-#         signature = sign_hash(4, hash_value)
-#         print(f"File hash: {hash_value}")
-#         print(f"Signature: {signature.hex()}")
-
-
-
-#         # if response == b'\x00' * response.count(b'\x00'):
-#         #     print("Device
-#         #     # 打印接收到的数据的十六进制表示
-#         #     print("Received response:", response.hex())
-
-#     except KeyboardInterrupt:
-#         print("Exiting...")
-
-#     finally:
-#         # 关闭串口
-#         ser.close()
-#         print("Closed port")
-# else:
-#     print("Failed to open port")
