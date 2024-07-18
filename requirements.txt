@@ -1,2 +1,4 @@
 flask
 Werkzeug
+jsonify
+requests
