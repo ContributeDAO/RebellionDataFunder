@@ -72,7 +72,7 @@ def sign_hash(key_id: int, hash_value: bytes):
         return 0    
     key_id_bytes = key_id.to_bytes(1, 'big')
     command_prefix = bytes.fromhex('53 48 ')
-    hash_value_bytes = hash_value.encode('utf-8')  # 确保hash_value是bytes类型
+    hash_value_bytes = hash_value.fromhex(hash_value)  # 确保hash_value是bytes类型
     #hash_length = len(hash_value).to_bytes(1, 'big', signed=True)
     return send_command(command_prefix, key_id_bytes +  hash_value_bytes)
 
