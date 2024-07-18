@@ -4,7 +4,7 @@ import base64
 from typing import List, Dict
 import uuid
 import json
-import logging
+#import logging
 app = Flask(__name__)
  
  
@@ -107,7 +107,7 @@ def handle_keys():
 
         # 将 Base64 编码的字符串转回 bytes
         key = base64.b64decode(key_base64)
-        logging.warning(f"Received key ID: {key_id}")
+        print(f"Received key ID: {key_id}")
         print(f"Received key: {key}")
         session_id = generate_session_id()
         new_verifier = Verifier(session_id, key)

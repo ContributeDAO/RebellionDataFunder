@@ -1,6 +1,5 @@
 flask
 Werkzeug
-jsonify
 requests
 base64
 json
