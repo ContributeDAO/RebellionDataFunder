@@ -159,5 +159,29 @@ def handle_verify_signature():
     return Response(verification_request.to_json(), mimetype='application/json'), 202  # 202 Accepted    
 
 
+@app.route('/verify_result/', methods=['POST'])
+def handle_verify_result():
+    data = request.json
+    request_id=data.get('request_id')
+    #verifier_public_key = base64.b64decode(data.get('request_public_key'))
+    
+    # verifier_hash = base64.b64decode(data.get('verifier_hash'))
+    # hash_signature = base64.b64decode(data.get('hash_signature'))
+    verification_status=data.get('verification_status')
+        # 遍历 verifiers 字典，查找匹配的 request_id
+    for verifier in verifiers.values():
+        # 遍历每个 verifier 的 verification_requests 列表
+        for verification_request in verifier["verifier"].verification_requests:
+            if verification_request.request_id == request_id:
+                # 更新找到的 VerificationRequest
+
+                verification_request.verification_status= verification_status
+
+                return jsonify({"message": "Verification result updated successfully"}), 250
+
+    # 如果没有找到匹配的 request_id
+    return jsonify({"error": "Verification request not found"}), 404
+
+
 if __name__ == '__main__':
     app.run(debug=True, port=os.getenv("PORT", default=5000), host='0.0.0.0')
