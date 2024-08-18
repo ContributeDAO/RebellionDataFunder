@@ -16,6 +16,11 @@ HTML_TEMPLATE = """
     <title>Auction System</title>
 </head>
 <body>
+
+    <h1>BlocksAuction:</h1>
+            <form action="/start_auction/" method="post">
+        </li>
+        
     <h1>Auction System</h1>
     <!-- 添加区块表单 -->
     <form action="/add_block" method="post">
@@ -36,21 +41,6 @@ HTML_TEMPLATE = """
         <input type="submit" value="Add Verifier">
     </form>
 
-    <h2>Blocks:</h2>
-    <ul>
-        {% for block in blocks %}
-        <li>
-            Block ID: {{ block.block_id }}<br>
-            Price: {{ block.price }}<br>
-            <!-- 其他区块属性... -->
-            Verified: {{ 'Yes' if block.verified else 'No' }}
-            <!-- 添加拍卖按钮 -->
-            <form action="/start_auction/{{ block.block_id }}" method="post">
-                <input type="submit" value="Start Auction for Block {{ block.block_id }}">
-            </form>
-        </li>
-        {% endfor %}
-    </ul>
     <h2>Blocks:</h2>
     <ul>
         {% for block in blocks %}
@@ -103,7 +93,7 @@ def add_verifier():
 @app.route('/start_auction/<int:block_id>', methods=['GET'])
 def start_auction(block_id):
     # 激活荷兰式拍卖系统
-    system.scan_for_verification()
+    system.start_auction()
     
     
 if __name__ == '__main__':

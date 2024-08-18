@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from queue import Full
 import time
 from typing import List
 
@@ -56,6 +57,7 @@ class Verifier:
         if self.bid_price <= reward:
             system.verify_block(block, self)
             total_score+=reward
+            
             return True
         else:
             print(f"Bid rejected: Bid price {self.bid_price} is higher than the block reward {reward}.")
@@ -73,53 +75,74 @@ class VerificationSystem:
     def add_verifier(self, verifier: Verifier):
         self.verifiers.append(verifier)
 
-    def scan_for_verification(self):
+    def scan_for_verification(self)-> List[DataBlock]:
+        up_for_auction: List[DataBlock]=[]
         # 检索所有未验证且在DDL内的区块，将它们加入待验证列表
         current_time = int(time.time())
-        self.up_for_auction = [block for block in self.blocks if not block.verified and current_time <= block.ddl]
-
+        for block in self.blocks:
+            if not block.verified and current_time <= block.ddl:
+                up_for_auction.append(block)
+        return up_for_auction
+        
     def calculate_reward(self, block: DataBlock, current_time: int) -> float:
         t = current_time- block.creation_time
         T = block.ddl - block.creation_time
         reward = (block.min_reward + (block.max_reward - block.min_reward) * (sigmoid((t / T),block.growth_spd)))
         return block.price * (block.base_reward_rate + block.float_reward_rate) * reward
 
-    def verify_block(self, block_id: int, verifier_id: int):
+    def verify_block(self, block: DataBlock, verifier: Verifier):
         # 只在待验证列表中操作
-        for block in self.up_for_auction:
-            if block.block_id == block_id:
-                current_time = int(time.time())
-                reward = self.calculate_reward(block, current_time)
-                verifier = next((v for v in self.verifiers if v.verifier_id == verifier_id), None)
-                if verifier and verifier.bid_price >= reward:
-                    verifier.total_score += reward
-                    block.verified = True  # 修改状态为已验证
-                    print(f"Verifier {verifier.verifier_id} verified block {block.block_id} and earned {reward:.2f} points.")
-                    return True
-        print(f"Verification failed for block_id {block_id}.")
+        current_time = int(time.time())
+        reward = self.calculate_reward(block, current_time)
+        if verifier.bid_price <= reward:
+            verifier.total_score += reward
+            block.verified = True  # 修改状态为已验证
+            #test 验证成功则提高报价
+            verifier.bid_price = reward+1
+            print(f"Verifier {verifier.verifier_id} verified block {block.block_id} and earned {reward:.2f} points.")
+            return True
+        print(f"verifier ={verifier.verifier_id} verifier.bid_price={verifier.bid_price} verification failed for block_id ={block.block_id},now reward={reward:.2f}.")
         return False
 
-    # 其他方法...
+    def start_auction(self):
+        # 拍卖逻辑
+        print("start auction")
+        start_time = time.time()
+        while time.time() - start_time < 60:  # 假设拍卖持续1分钟
+            self.up_for_auction=self.scan_for_verification()
+            if(self.up_for_auction.__len__==0):
+                return
+            for block in self.up_for_auction:
+                for verifier in self.verifiers:
+                    if(self.verify_block(block, verifier)):
+                        break
+            # 这里可以添加逻辑来接受出价和选择胜出的验证者
+            time.sleep(1)  # 每秒检查一次
+            
+        for verifier in self.verifiers:
+            print(verifier)
 
-# 示例用法
+
+# 示例
 system = VerificationSystem()
 
-# # 添加区块和验证者
-# block1 = DataBlock(block_id=1, price=10.0, base_reward_rate=0.05, float_reward_rate=0.02,
-#                    min_reward=1.0, max_reward=10.0, ddl=int(120))
-# system.add_block(block1)
-# verifier1 = Verifier(verifier_id=1, bid_price=8.0)
-# system.add_verifier(verifier1)
+# 添加区块和验证者
+block1 = DataBlock(block_id=1, price=10.0, base_reward_rate=0.05, float_reward_rate=0.02,
+                   min_reward=1.0, max_reward=10.0, ddl=int(time.time()+60))
+block2 = DataBlock(block_id=2, price=10.0, base_reward_rate=0.05, float_reward_rate=0.03,
+                   min_reward=1.0, max_reward=10.0, ddl=int(time.time()+60))
+block3 = DataBlock(block_id=2, price=10.0, base_reward_rate=0.05, float_reward_rate=0.03,
+                   min_reward=1.0, max_reward=10.0, ddl=int(time.time()+60))
 
-# # 扫描待验证区块
-# system.scan_for_verification()
 
-# # 尝试验证区块
-# time.sleep(10)  # 等待10秒
-# system.verify_block(block_id=1, verifier_id=1)
 
-# # 检查区块是否需要重新加入验证池
-# time.sleep(60)  # 等待超过DDL时间
-# for block in system.blocks:
-#     if time.time() > block.ddl and not block.verified:
-#         print(f"Block {block.block_id} has not been verified and is no longer eligible for verification.")
+system.add_block(block1)
+system.add_block(block2)
+system.add_block(block3)
+
+verifier1 = Verifier(verifier_id=1, bid_price=4.0)
+verifier2 = Verifier(verifier_id=2, bid_price=5.0)
+system.add_verifier(verifier1)
+system.add_verifier(verifier2)
+
+system.start_auction()
